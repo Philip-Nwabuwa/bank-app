@@ -4,6 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import mongoose from "mongoose";
 import userRouter from "./routes/user.js";
+import accountRouter from "./routes/account.js";
 
 dotenv.config();
 
@@ -16,11 +17,6 @@ app.use(morgan("dev"));
 // middleware
 app.use(express.json());
 
-// app.use((req, res, next) => {
-//   console.log(req.path, req.method);
-//   next();
-// });
-
 const port = process.env.PORT || 8000;
 
 // routes
@@ -29,6 +25,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/user", userRouter);
+app.use("/api/account", accountRouter);
 
 // connect to db
 mongoose

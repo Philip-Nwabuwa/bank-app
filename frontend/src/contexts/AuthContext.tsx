@@ -1,8 +1,8 @@
-import { FC, ReactNode, createContext, useReducer } from "react";
+import { FC, ReactNode, createContext, useReducer, useEffect } from "react";
 
 type User = {
-  id: string;
-  username: string;
+  id?: string;
+  username?: string;
   email: string;
 };
 
@@ -50,6 +50,19 @@ export const AuthContextProvider: FC<{ children: ReactNode }> = ({
     isLoggedIn: false,
     user: null,
   });
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const email = localStorage.getItem("user");
+    if (token) {
+      dispatch({
+        type: "LOGIN",
+        payload: {
+          email: email as string,
+        },
+      });
+    }
+  }, []);
 
   console.log("Auth state: ", state);
 
