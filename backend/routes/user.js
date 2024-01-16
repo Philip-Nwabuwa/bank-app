@@ -1,24 +1,19 @@
 import express from "express";
-import otpGenerator from "otp-generator";
 
-// controller functions
 import {
   loginUser,
   signupUser,
   resetPassword,
+  verifyUser,
+  generateotp,
+  verifyOTP,
+  resetOTP,
+  logoutUser,
+  getUserDetails,
+  updateUserDetails,
+  resetPasswordWithAuth,
 } from "../controllers/userController.js";
-import userModel from "../models/userModel.js";
-import otpModel from "../models/otpModel.js";
-
-export const generateOTP = () => {
-  const otp = otpGenerator.generate(6, {
-    digits: true,
-    lowerCaseAlphabets: false,
-    upperCaseAlphabets: false,
-    specialChars: false,
-  });
-  return otp;
-};
+import Auth from "../middleware/Auth.js";
 
 const userRouter = express.Router();
 
@@ -28,93 +23,31 @@ userRouter.post("/login", loginUser);
 // signup route
 userRouter.post("/signup", signupUser);
 
+// logout user
+userRouter.post("/logout", logoutUser);
+
 // verfiy OTP
-userRouter.get("/verifyOTP", async (req, res) => {
-  const { otp, email } = req.body;
-  if (!otp || !email) {
-    return res.status(400).json({ error: "Please provide OTP and email" });
-  }
-  try {
-    const user = await otpModel.findOne({ email });
-    console.log(user);
-    if (!user) {
-      return res.status(400).json({ error: "Invalid user" });
-    }
-    if (otp === user.otp) {
-      await otpModel.deleteOne({ email });
-      await userModel.updateOne({ email }, { isVerified: true });
-      return res.status(200).json({ message: "OTP verified" });
-    }
-    return res.status(400).json({ error: "Invalid OTP" });
-  } catch (error) {
-    return res.status(500).json({ error: "An error occurred" });
-  }
-});
+userRouter.get("/verifyOTP", verifyOTP);
 
 // reset OTP
-userRouter.get("/resetOTP", async (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ error: "Please provide email" });
-  }
-  try {
-    const user = await userModel.findOne({ email });
-    console.log(user);
-    if (!user) {
-      return res.status(400).json({ error: "Invalid user" });
-    }
-    await otpModel.deleteOne({ email });
-    const otp = generateOTP();
-    console.log("OTP ", otp);
-    await otpModel.create({
-      email,
-      otp,
-    });
-    return res.status(200).json({ message: "OTP resent" });
-  } catch (error) {
-    return res.status(500).json({ error: "An error occurred" });
-  }
-});
+userRouter.get("/resetOTP", verifyUser, resetOTP);
 
-// reset Password
-userRouter.get("/resetPassword", resetPassword);
+// reset Password without authentication
+userRouter.put("/resetPassword", resetPassword);
 
-// generate OTP
-userRouter.get("/generateOTP", async (req, res) => {
-  const { email } = req.body;
-  const otp = generateOTP();
-  if (!email) {
-    return res.status(400).json({ error: "Please provide email" });
-  }
-  console.log("OTP ", otp);
-  await otpModel.deleteOne({ email });
+// reset Password with authentication
+userRouter.put("/resetpasswordAuth", Auth, resetPasswordWithAuth);
 
-  await otpModel.create({
-    email,
-    otp,
-  });
-  return res.status(200).json({ message: "OTP sent" });
-});
+// verify user then generate otp
+userRouter.get("/generateotp", verifyUser, generateotp);
 
 // verify user
-userRouter.get("/verifyUser", async (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ error: "Please provide email" });
-  }
-  try {
-    const user = await userModel.findOne({ email });
-    console.log(user);
-    if (!user) {
-      return res.status(400).json({ error: "Invalid user" });
-    }
-    if (user.isVerified) {
-      return res.status(200).json({ message: "User verified" });
-    }
-    return res.status(400).json({ error: "User not verified" });
-  } catch (error) {
-    return res.status(500).json({ error: "An error occurred" });
-  }
-});
+userRouter.post("/verifyUser", verifyUser);
+
+// updat User
+userRouter.put("/updateUser", Auth, updateUserDetails);
+
+//get user details
+userRouter.get("/getUserDetails", Auth, getUserDetails);
 
 export default userRouter;

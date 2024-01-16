@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import validator from "validator";
 import OTP from "../models/otpModel.js";
-import { generateOTP } from "../routes/user.js";
+import { generateOTP } from "../helper/generateOTP.js";
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -61,6 +61,20 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+userSchema.pre("save", async function (next) {
+  const user = this;
+  if (user.isModified("password")) {
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+  }
+  next();
+});
+
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  const user = this;
+  return await bcrypt.compare(enteredPassword, user.password);
+};
+
 // static signup method
 userSchema.statics.signup = async function (
   email,
@@ -72,7 +86,6 @@ userSchema.statics.signup = async function (
   address,
   gender
 ) {
-  console.log(email);
   if (!email || !password) {
     throw new Error("Please provide email and password");
   }
@@ -121,12 +134,9 @@ userSchema.statics.signup = async function (
     otp,
   });
 
-  const salt = await bcrypt.genSalt(10);
-  const hash = await bcrypt.hash(password, salt);
-
   const user = await this.create({
     email,
-    password: hash,
+    password,
     image,
     firstName,
     lastName,
@@ -149,9 +159,7 @@ userSchema.statics.login = async function (email, password) {
     throw new Error("User does not exist");
   }
 
-  const match = await bcrypt.compare(password, user.password);
-
-  if (!match) {
+  if (!(await user.matchPassword(password))) {
     user.loginAttempts += 1;
     if (user.loginAttempts >= 5) {
       // Lock the user account

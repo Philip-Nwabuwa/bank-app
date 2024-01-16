@@ -3,23 +3,26 @@ import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 
 const Auth = async (req, res, next) => {
-  const { authorization } = req.headers;
+  let token;
 
-  if (!authorization) {
-    return res
-      .status(401)
-      .json({ error: "Please provide an authorization header" });
-  }
+  token = req.cookies.jwt;
 
-  const token = authorization.split(" ")[1];
-
-  try {
-    const { _id } = jwt.verify(token, process.env.JWT_SECRET);
-
-    req.user = await User.findById(_id).select(`_id`);
-    next();
-  } catch (error) {
-    return res.status(401).json({ error: "Invalid token" });
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.userId).select("-password");
+      next();
+    } catch (error) {
+      return res.status(401).json({
+        error: "Access Denied",
+        message: "Not authorized, token expired",
+      });
+    }
+  } else {
+    return res.status(401).json({
+      error: "Access Denied",
+      message: "Not authorized, no token provided",
+    });
   }
 };
 

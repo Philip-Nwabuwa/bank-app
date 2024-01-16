@@ -8,7 +8,12 @@ import userModel from "../models/userModel.js";
 dotenv.config();
 
 export const createAccount = async (req, res) => {
+  console.log(req.user);
+  if (!req.user || !req.user._id) {
+    return res.status(400).send("User not found");
+  }
   const userId = req.user._id;
+
   const existingAccount = await Account.findOne({ userId: userId });
   if (existingAccount) {
     return res.status(400).send("User already has an account");
