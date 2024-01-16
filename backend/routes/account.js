@@ -7,6 +7,8 @@ import {
   transactionPerUser,
   transactions,
   createAccount,
+  createPin,
+  resetPin,
 } from "../controllers/accountController.js";
 import Auth from "../middleware/Auth.js";
 
@@ -31,5 +33,11 @@ accountRouter.get("/usertransactions", transactionPerUser);
 
 // Check account balance
 accountRouter.get("/balance", accountBalance);
+
+// create pin
+accountRouter.post("/createpin", createPin);
+
+//reset pin
+accountRouter.put("/resetpin", resetPin);
 
 export default accountRouter;

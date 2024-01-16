@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt"
-import validator from "validator"
+import bcrypt from "bcrypt";
+import validator from "validator";
+import OTP from "../models/otpModel.js";
+import { generateOTP } from "../routes/user.js";
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -8,81 +10,163 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
   password: {
     type: String,
     required: true,
   },
-  // profile: {
-  //   type: String,
-  // },
-  // firstName: {
-  //   type: String,
-  // },
-  // lastName: {
-  //   type: String,
-  // },
-  // mobile: {
-  //   type: String,
-  //   required: true,
-  // },
-  // address: {
-  //   type: String,
-  // },
-  // gender: {
-  //   type: String,
-  //   default: null,
-  //   required: true,
-  // },
+  image: {
+    type: String,
+  },
+  firstName: {
+    type: String,
+    required: true,
+  },
+  lastName: {
+    type: String,
+    required: true,
+  },
+  mobile: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  address: {
+    type: String,
+  },
+  gender: {
+    type: String,
+    enum: ["Male", "Female", "Other"],
+    default: null,
+    required: true,
+  },
+  loginAttempts: {
+    type: Number,
+    default: 0,
+  },
+  isLocked: {
+    type: Boolean,
+    default: false,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 // static signup method
-userSchema.statics.signup = async function(email, password) {
+userSchema.statics.signup = async function (
+  email,
+  password,
+  image,
+  firstName,
+  lastName,
+  mobile,
+  address,
+  gender
+) {
+  console.log(email);
+  if (!email || !password) {
+    throw new Error("Please provide email and password");
+  }
 
-  if (!email ||!password) {
-    throw Error("Please provide email and password");
+  if (!firstName) {
+    throw new Error("Please provide first name");
+  }
+
+  if (!lastName) {
+    throw new Error("Please provide last name");
+  }
+
+  if (!mobile) {
+    throw new Error("Please provide mobile number");
+  }
+
+  if (!gender) {
+    throw new Error("Please provide gender");
   }
 
   if (!validator.isEmail(email)) {
-    throw Error("Invalid email");
+    throw new Error("Invalid email");
   }
 
   if (!validator.isStrongPassword(password)) {
-    throw Error("Password is too weak");
+    throw new Error("Password is too weak");
   }
 
   const exists = await this.findOne({ email });
 
   if (exists) {
-    throw Error("Email already registered");
+    throw new Error("Email already registered");
   }
 
-  const salt = await bcrypt.genSalt(10)
-  const hash = await bcrypt.hash(password, salt)
+  const mobileExists = await this.findOne({ mobile });
 
-  const user = await this.create({email, password: hash})
-  return user
+  if (mobileExists) {
+    throw new Error("Mobile number already registered");
+  }
+
+  const otp = generateOTP();
+  console.log("OTP ", otp);
+
+  await OTP.create({
+    email,
+    otp,
+  });
+
+  const salt = await bcrypt.genSalt(10);
+  const hash = await bcrypt.hash(password, salt);
+
+  const user = await this.create({
+    email,
+    password: hash,
+    image,
+    firstName,
+    lastName,
+    mobile,
+    address,
+    gender,
+  });
+  return user;
 };
 
 // static login method
-userSchema.statics.login = async function(email, password) {
-
-  if (!email ||!password) {
-    throw Error("Please provide email and password");
+userSchema.statics.login = async function (email, password) {
+  if (!email || !password) {
+    throw new Error("Please provide email and password");
   }
 
   const user = await this.findOne({ email });
 
   if (!user) {
-    throw Error("User does not exist");
+    throw new Error("User does not exist");
   }
 
-  const match = await bcrypt.compare(password, user.password)
+  const match = await bcrypt.compare(password, user.password);
 
   if (!match) {
-    throw Error("Invalid credentials");
+    user.loginAttempts += 1;
+    if (user.loginAttempts >= 5) {
+      // Lock the user account
+      user.isLocked = true;
+      await user.save();
+
+      throw new Error("Account locked. Please reset your password.");
+    }
+
+    await user.save();
+
+    throw new Error("Invalid credentials");
   }
 
-  return user
+  return user;
 };
 
 export default mongoose.model.Users || mongoose.model("User", userSchema);

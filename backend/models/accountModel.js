@@ -6,6 +6,11 @@ const accountSchema = new mongoose.Schema({
     required: true,
     ref: "User",
   },
+  bankName: {
+    type: String,
+    required: true,
+    default: "FundFirst",
+  },
   accountNumber: {
     type: Number,
     required: true,
@@ -14,7 +19,18 @@ const accountSchema = new mongoose.Schema({
   balance: {
     type: Number,
     required: true,
+    default: 0.0,
+  },
+  pin: {
+    type: String,
+  },
+  pinAttempts: {
+    type: Number,
     default: 0,
+  },
+  isLocked: {
+    type: Boolean,
+    default: false,
   },
   transactions: [
     {
@@ -23,6 +39,11 @@ const accountSchema = new mongoose.Schema({
     },
   ],
   createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+
+  updatedAt: {
     type: Date,
     default: Date.now,
   },

@@ -33,6 +33,11 @@ const transactionSchema = new mongoose.Schema({
     enum: ["pending", "completed", "failed"],
     default: "pending",
   },
+
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 export default mongoose.model.transactions ||
