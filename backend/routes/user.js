@@ -12,6 +12,9 @@ import {
   getUserDetails,
   updateUserDetails,
   resetPasswordWithAuth,
+  emailCheck,
+  emailLoginCheck,
+  loginUserWithoutPassword,
 } from "../controllers/userController.js";
 import Auth from "../middleware/Auth.js";
 
@@ -20,6 +23,9 @@ const userRouter = express.Router();
 // login route
 userRouter.post("/login", loginUser);
 
+// loginwithoutPassword
+userRouter.post("/loginwithoutPassword", loginUserWithoutPassword);
+
 // signup route
 userRouter.post("/signup", signupUser);
 
@@ -27,10 +33,10 @@ userRouter.post("/signup", signupUser);
 userRouter.post("/logout", logoutUser);
 
 // verfiy OTP
-userRouter.get("/verifyOTP", verifyOTP);
+userRouter.post("/verifyOTP", verifyOTP);
 
 // reset OTP
-userRouter.get("/resetOTP", verifyUser, resetOTP);
+userRouter.post("/resetOTP", resetOTP);
 
 // reset Password without authentication
 userRouter.put("/resetPassword", resetPassword);
@@ -39,13 +45,19 @@ userRouter.put("/resetPassword", resetPassword);
 userRouter.put("/resetpasswordAuth", Auth, resetPasswordWithAuth);
 
 // verify user then generate otp
-userRouter.get("/generateotp", verifyUser, generateotp);
+userRouter.post("/generateotp", generateotp);
 
 // verify user
 userRouter.post("/verifyUser", verifyUser);
 
 // updat User
 userRouter.put("/updateUser", Auth, updateUserDetails);
+
+// validate email
+userRouter.post("/emailcheck", emailCheck);
+
+//check login email
+userRouter.post("/verifyLoginEmail", emailLoginCheck);
 
 //get user details
 userRouter.get("/getUserDetails", Auth, getUserDetails);

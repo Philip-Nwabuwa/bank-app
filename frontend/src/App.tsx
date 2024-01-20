@@ -1,4 +1,12 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
+import { Toaster } from "sonner";
+
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Navbar from "./components/common/Navbar";
@@ -7,32 +15,31 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: Infinity,
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      refetchOnMount: false,
-    },
-  },
+  defaultOptions: {},
 });
+
+function Layout() {
+  const location = useLocation();
+  return (
+    <>
+      {location.pathname === "/dashboard" && <Navbar />}
+      <Routes>
+        <Route path="/" element={<Navigate replace to="/dashboard" />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    </>
+  );
+}
 
 function App() {
   return (
     <main>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <Navbar />
-          <div>
-            <Routes>
-              <Route path="/" element={<Navigate replace to="/dashboard" />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/login" element={<Login />} />
-            </Routes>
-          </div>
+          <Layout />
+          <Toaster richColors position="top-center" />
         </BrowserRouter>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

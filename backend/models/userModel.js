@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  dob: {
+    type: Date,
+    default: null,
+  },
   mobile: {
     type: String,
     required: true,
@@ -84,7 +88,8 @@ userSchema.statics.signup = async function (
   lastName,
   mobile,
   address,
-  gender
+  gender,
+  dob
 ) {
   if (!email || !password) {
     throw new Error("Please provide email and password");
@@ -104,6 +109,10 @@ userSchema.statics.signup = async function (
 
   if (!gender) {
     throw new Error("Please provide gender");
+  }
+
+  if (!dob) {
+    throw new Error("Please provide date of birth");
   }
 
   if (!validator.isEmail(email)) {
@@ -143,6 +152,7 @@ userSchema.statics.signup = async function (
     mobile,
     address,
     gender,
+    dob,
   });
   return user;
 };

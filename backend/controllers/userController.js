@@ -9,12 +9,6 @@ import generateToken from "../helper/generateTokens.js";
 
 dotenv.config();
 
-const tokenENV = process.env.JWT_SECRET;
-
-if (!tokenENV) {
-  throw Error("JWTPASSWORDSECRET is not set");
-}
-
 // login a user
 export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -44,6 +38,50 @@ export const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
+export const loginUserWithoutPassword = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+  if (!otp || !email) {
+    return res.status(400).json({ error: "Please provide OTP and email" });
+  }
+  const user = await userModel.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ error: "Invalid user" });
+  }
+
+  try {
+    const userOTP = await otpModel.findOne({ email });
+    if (!userOTP) {
+      return res.status(400).json({ error: "OTP not found or expired" });
+    }
+    const validOTP = otp === userOTP.otp;
+    console.log("validOTP", validOTP);
+    if (otp === userOTP.otp) {
+      await otpModel.deleteOne({ email });
+      console.log(user._id);
+      generateToken(res, user._id);
+      return res.status(200).json({
+        message: "Login successful",
+        user: {
+          _id: user._id,
+          image: user.image,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          mobile: user.mobile,
+          address: user.address,
+          gender: user.gender,
+          dob: user.dob,
+          createdAt: user.createdAt,
+        },
+      });
+    } else {
+      return res.status(400).json({ error: "Invalid OTP" });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: "Error during login" });
+  }
+});
+
 // signup a user
 export const signupUser = asyncHandler(async (req, res) => {
   const {
@@ -55,6 +93,7 @@ export const signupUser = asyncHandler(async (req, res) => {
     mobile,
     address,
     gender,
+    dob,
   } = req.body;
   try {
     await userModel.signup(
@@ -65,7 +104,8 @@ export const signupUser = asyncHandler(async (req, res) => {
       lastName,
       mobile,
       address,
-      gender
+      gender,
+      dob
     );
     const user = await userModel({ email });
     generateToken(res, user._id);
@@ -186,6 +226,41 @@ export const verifyUser = asyncHandler(async (req, res, next) => {
       return res.status(400).json({ error: "Invalid user" });
     }
     next();
+  } catch (error) {
+    return res.status(500).json({ error: "An error occurred" });
+  }
+});
+
+export const emailCheck = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: "Please provide email" });
+  }
+  try {
+    const user = await userModel.findOne({ email });
+    console.log(user);
+    if (user) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+    return res.status(200).json({ message: "Proceed" });
+  } catch (error) {
+    return res.status(500).json({ error: "An error occurred" });
+  }
+});
+
+export const emailLoginCheck = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: "Please provide email" });
+  }
+  try {
+    const user = await userModel.findOne({ email });
+    if (user) {
+      return res.status(200).json({ message: "Proceed" });
+    }
+    return res
+      .status(404)
+      .json({ error: "User not found, Proceed to create an account." });
   } catch (error) {
     return res.status(500).json({ error: "An error occurred" });
   }

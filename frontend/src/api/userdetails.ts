@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 const config = {
@@ -7,9 +7,17 @@ const config = {
   },
 };
 
-type SignupPayload = {
-  email: string;
-  password: string;
+export type SignupPayload = {
+  email?: string;
+  password?: string;
+  image?: string;
+  dob?: string;
+  gender?: string;
+  firstName?: string;
+  lastName?: string;
+  address?: string;
+  username?: string;
+  mobile?: string;
 };
 
 type LoginPayload = {
@@ -17,15 +25,20 @@ type LoginPayload = {
   password: string;
 };
 
+type EmailCheckPayload = {
+  email: string;
+};
+
+type OTPPayload = {
+  email: string;
+  otp: number;
+};
+
 export const useSignup = () => {
   const mutationFn = async (payload: SignupPayload) => {
     const data = payload;
 
-    return await axios.post(
-      "http://localhost:4000/api/user/signup",
-      data,
-      config
-    );
+    return await axios.post("/api/user/signup", data, config);
   };
   const {
     mutate,
@@ -41,11 +54,7 @@ export const useLogin = () => {
   const mutationFn = async (payload: LoginPayload) => {
     const data = payload;
 
-    return await axios.post(
-      "http://localhost:4000/api/user/login",
-      data,
-      config
-    );
+    return await axios.post("/api/user/login", data, config);
   };
   const {
     mutate,
@@ -55,4 +64,124 @@ export const useLogin = () => {
   } = useMutation({ mutationFn: mutationFn });
 
   return { mutate, mutateAsync, isLoading, data };
+};
+
+export const useLoginWithoutPassword = () => {
+  const mutationFn = async (payload: OTPPayload) => {
+    const data = payload;
+
+    return await axios.post("/api/user/loginwithoutPassword", data, config);
+  };
+  const {
+    mutate,
+    mutateAsync,
+    isPending: isLoading,
+    data,
+  } = useMutation({ mutationFn: mutationFn });
+
+  return { mutate, mutateAsync, isLoading, data };
+};
+
+export const useEmailCheck = () => {
+  const mutationFn = async (payload: EmailCheckPayload) => {
+    const data = payload;
+
+    return await axios.post("/api/user/emailcheck", data, config);
+  };
+  const {
+    mutate,
+    mutateAsync,
+    isPending: isLoading,
+    data,
+  } = useMutation({ mutationFn: mutationFn });
+
+  return { mutate, mutateAsync, isLoading, data };
+};
+
+export const verifyLoginEmail = () => {
+  const mutationFn = async (payload: EmailCheckPayload) => {
+    const data = payload;
+
+    return await axios.post("/api/user/verifyLoginEmail", data, config);
+  };
+  const {
+    mutate,
+    mutateAsync,
+    isPending: isLoading,
+    data,
+  } = useMutation({ mutationFn: mutationFn });
+
+  return { mutate, mutateAsync, isLoading, data };
+};
+
+export const useresetOTP = () => {
+  const mutationFn = async (payload: EmailCheckPayload) => {
+    const data = payload;
+
+    return await axios.post("/api/user/resetOTP", data, config);
+  };
+  const {
+    mutate,
+    mutateAsync,
+    isPending: isLoading,
+    data,
+  } = useMutation({ mutationFn: mutationFn });
+
+  return { mutate, mutateAsync, isLoading, data };
+};
+export const useVerifyOTP = () => {
+  const mutationFn = async (payload: OTPPayload) => {
+    const data = payload;
+
+    return await axios.post("/api/user/verifyOTP", data, config);
+  };
+  const {
+    mutate,
+    mutateAsync,
+    isPending: isLoading,
+    data,
+  } = useMutation({ mutationFn: mutationFn });
+
+  return { mutate, mutateAsync, isLoading, data };
+};
+
+export const useGenerateOTP = () => {
+  const mutationFn = async (payload: EmailCheckPayload) => {
+    const data = payload;
+
+    return await axios.post("/api/user/generateotp", data, config);
+  };
+  const {
+    mutate,
+    mutateAsync,
+    isPending: isLoading,
+    data,
+  } = useMutation({ mutationFn: mutationFn });
+
+  return { mutate, mutateAsync, isLoading, data };
+};
+
+export const useLogout = () => {
+  const mutationFn = async () => {
+    return await axios.post("/api/user/logout", config);
+  };
+  const {
+    mutate,
+    mutateAsync,
+    isPending: isLoading,
+  } = useMutation({ mutationFn: mutationFn });
+
+  return { mutate, mutateAsync, isLoading };
+};
+
+export const useGetuser = () => {
+  const queryFn = async () => {
+    return await axios.post("api/user/logout");
+  };
+  const { data, refetch, isLoading } = useQuery({
+    queryKey: ["logout"],
+    queryFn: queryFn,
+  });
+
+  return { data, refetch, isLoading };
 };
