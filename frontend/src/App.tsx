@@ -1,33 +1,44 @@
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
 
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Navbar from "./components/common/Navbar";
-import Dashboard from "./pages/Dashboard";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import AuthLayout from "./pages/auth/AuthLayout";
+import LoginForm from "./components/modules/LoginForm";
+import SignUpForm from "./components/modules/SignUpForm";
+import NotFound from "./pages/NotFound";
+import MainLayout from "./pages/Main/MainLayout";
+import {
+  Dashboard,
+  Messages,
+  Profile,
+  Transactions,
+  Wallet,
+} from "./pages/Main";
 
 const queryClient = new QueryClient({
   defaultOptions: {},
 });
 
 function Layout() {
-  const location = useLocation();
   return (
     <>
-      {location.pathname === "/dashboard" && <Navbar />}
       <Routes>
+        <Route element={<AuthLayout />}>
+          <Route path="/signup" element={<SignUpForm />} />
+          <Route path="/login" element={<LoginForm />} />
+        </Route>
+
+        <Route element={<MainLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/wallet" element={<Wallet />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/profile" element={<Profile />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
+
         <Route path="/" element={<Navigate replace to="/dashboard" />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
       </Routes>
     </>
   );

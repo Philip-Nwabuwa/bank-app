@@ -6,6 +6,7 @@ import userModel from "../models/userModel.js";
 import otpModel from "../models/otpModel.js";
 import { generateOTP } from "../helper/generateOTP.js";
 import generateToken from "../helper/generateTokens.js";
+import SendEmailOtp from "../helper/resend.js";
 
 dotenv.config();
 
@@ -269,35 +270,43 @@ export const emailLoginCheck = asyncHandler(async (req, res) => {
 export const generateotp = asyncHandler(async (req, res) => {
   const { email } = req.body;
   const otp = generateOTP();
+  if (!otp) {
+    return res.status(400).json({ error: "OTP generation failed, try again" });
+  }
   if (!email) {
     return res.status(400).json({ error: "Please provide email" });
   }
   console.log("OTP ", otp);
-  await otpModel.deleteOne({ email });
-
-  await otpModel.create({
-    email,
-    otp,
-  });
-  return res.status(200).json({ message: "OTP sent" });
+  try {
+    const result = await SendEmailOtp({ email, otp });
+    if (result.success) {
+      await otpModel.deleteOne({ email });
+      await otpModel.create({ email, otp });
+      return res.status(200).json({ message: "OTP sent" });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 export const resetOTP = asyncHandler(async (req, res) => {
   const { email } = req.body;
+  const otp = generateOTP();
+  if (!otp) {
+    return res.status(400).json({ error: "OTP generation failed, try again" });
+  }
   if (!email) {
     return res.status(400).json({ error: "Please provide email" });
   }
   try {
-    await otpModel.deleteOne({ email });
-    const otp = generateOTP();
-    console.log("OTP ", otp);
-    await otpModel.create({
-      email,
-      otp,
-    });
-    return res.status(200).json({ message: "OTP resent" });
+    const result = await SendEmailOtp({ email, otp });
+    if (result.success) {
+      await otpModel.deleteOne({ email });
+      await otpModel.create({ email, otp });
+      return res.status(200).json({ message: "OTP resent" });
+    }
   } catch (error) {
-    return res.status(500).json({ error: "An error occurred" });
+    return res.status(500).json({ error: error.message });
   }
 });
 

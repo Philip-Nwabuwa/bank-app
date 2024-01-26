@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import axios, { AxiosError } from "axios";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -22,9 +22,11 @@ import {
   useresetOTP,
   verifyLoginEmail,
 } from "@/api/userdetails";
+import { cn } from "@/lib/utils";
+
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, Link } from "react-router-dom";
 import { AlertOctagon, CheckCheck, Loader, Undo2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Label } from "../ui/label";
@@ -60,6 +62,17 @@ const LoginForm = () => {
 
   return (
     <>
+      <div>
+        <Link
+          to="/signup"
+          className={cn(
+            buttonVariants({ variant: "ghost" }),
+            "absolute right-4 top-4 md:right-8 md:top-8 bg-accent/50"
+          )}
+        >
+          Create an account
+        </Link>
+      </div>
       <AnimatePresence>
         {step === 1 && <LoginWithPassword next={next} />}
         {step === 2 && (

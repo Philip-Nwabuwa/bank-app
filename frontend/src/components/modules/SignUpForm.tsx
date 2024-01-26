@@ -9,7 +9,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+
 import {
   Form,
   FormControl,
@@ -37,7 +38,7 @@ import {
   CalendarIcon,
   PencilLine,
 } from "lucide-react";
-import { passwordSchema } from "@/lib/utils";
+import { cn, passwordSchema } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   Select,
@@ -94,6 +95,17 @@ const SignUpForm = () => {
 
   return (
     <>
+      <div>
+        <Link
+          to="/login"
+          className={cn(
+            buttonVariants({ variant: "ghost" }),
+            "absolute right-4 top-4 md:right-8 md:top-8 bg-accent/50"
+          )}
+        >
+          Login
+        </Link>
+      </div>
       <AnimatePresence>
         {step === 1 && <FormStep1 next={next} setEmail={setEmail} />}
         {step === 2 && <FormStep2 next={next} back={back} email={email} />}

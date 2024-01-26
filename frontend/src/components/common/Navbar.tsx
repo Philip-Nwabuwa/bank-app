@@ -1,7 +1,8 @@
-import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
 import { useLogout } from "@/api/userdetails";
 import { toast } from "sonner";
+import { CreditCard } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 const Navbar = () => {
   const { mutateAsync, isLoading } = useLogout();
@@ -12,15 +13,15 @@ const Navbar = () => {
   };
 
   return (
-    <header className="flex items-center justify-between py-4 px-8 bg-gray-100 border-b border-gray-300">
-      <Link to={"/"}>Home</Link>
-      <div className="flex items-center gap-6">
-        <>
-          <Button onClick={handleLogout}>
-            {isLoading ? "Logging out..." : "Logout"}
-          </Button>
-        </>
+    <header className="fixed h-[80px] px-10 py-4 z-20 w-full flex items-center justify-between bg-slate-100">
+      <div className="flex items-center text-lg font-medium">
+        <CreditCard className="w-10 h-10 text-accent pr-2 text-black" />
+        FundFirst
       </div>
+      <Avatar>
+        <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+        <AvatarFallback>CN</AvatarFallback>
+      </Avatar>
     </header>
   );
 };
