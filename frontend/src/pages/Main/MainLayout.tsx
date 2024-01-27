@@ -1,12 +1,12 @@
 import Navbar from "@/components/common/Navbar";
 import Sidebar from "@/components/modules/Sidebar";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useEffect, useState } from "react";
 
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 const MainLayout = () => {
-  const isAuthenticated = false;
-
+  const { isAuthenticated } = useAuthStore();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
 

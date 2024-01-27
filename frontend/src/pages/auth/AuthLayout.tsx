@@ -1,9 +1,12 @@
+import { useAuthStore } from "@/store/useAuthStore";
 import { CreditCard } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 
 const AuthLayout = () => {
-  const isAuthenticated = false;
+  const { isAuthenticated } = useAuthStore();
+  console.log(isAuthenticated);
+
   const testimonials = [
     {
       author: "Eduardo G",

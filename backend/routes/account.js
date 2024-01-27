@@ -10,11 +10,15 @@ import {
   createPin,
   resetPin,
 } from "../controllers/accountController.js";
+import { verifyUser } from "../controllers/userController.js";
 import Auth from "../middleware/Auth.js";
 
 const accountRouter = express.Router();
 
 accountRouter.use(Auth);
+
+// verify user
+accountRouter.get("/verify", verifyUser);
 
 //create account
 accountRouter.post("/create", createAccount);

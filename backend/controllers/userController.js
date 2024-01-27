@@ -6,9 +6,14 @@ import userModel from "../models/userModel.js";
 import otpModel from "../models/otpModel.js";
 import { generateOTP } from "../helper/generateOTP.js";
 import generateToken from "../helper/generateTokens.js";
-import SendEmailOtp from "../helper/resend.js";
+import {
+  SendEmailLogin,
+  SendEmailOtp,
+  SendEmailSignup,
+} from "../email/resend.js";
 
 dotenv.config();
+const tokenKey = process.env.JWT_SECRET;
 
 // login a user
 export const loginUser = asyncHandler(async (req, res) => {
@@ -17,6 +22,7 @@ export const loginUser = asyncHandler(async (req, res) => {
     const user = await userModel.login(email, password);
     await userModel.updateOne({ email }, { loginAttempts: 0 });
     generateToken(res, user._id);
+    SendEmailLogin({ email });
     return res.status(200).json({
       message: "Login successful",
       user: {
@@ -109,7 +115,7 @@ export const signupUser = asyncHandler(async (req, res) => {
       dob
     );
     const user = await userModel({ email });
-    generateToken(res, user._id);
+    await SendEmailSignup({ email });
     console.log(user);
     res.status(200).json({ message: "user successfully registered" });
   } catch (error) {
@@ -215,20 +221,20 @@ export const updateUserDetails = asyncHandler(async (req, res) => {
   }
 });
 
-export const verifyUser = asyncHandler(async (req, res, next) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ error: "Please provide email" });
-  }
+export const verifyUser = asyncHandler(async (req, res) => {
   try {
-    const user = await userModel.findOne({ email });
-    console.log(user);
-    if (!user) {
-      return res.status(400).json({ error: "Invalid user" });
+    const token = req.cookies.jwt;
+    if (!token) {
+      return res.status(401).json({ isAuthenticated: false });
     }
-    next();
+    jwt.verify(token, tokenKey, (err, decoded) => {
+      if (err) {
+        return res.status(401).json({ isAuthenticated: false });
+      }
+      res.json({ isAuthenticated: true, user: decoded });
+    });
   } catch (error) {
-    return res.status(500).json({ error: "An error occurred" });
+    res.status(500).json({ isAuthenticated: false });
   }
 });
 

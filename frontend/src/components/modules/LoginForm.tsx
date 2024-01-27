@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import axios, { AxiosError } from "axios";
+import Cookies from "js-cookie";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -31,6 +32,7 @@ import { AlertOctagon, CheckCheck, Loader, Undo2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Label } from "../ui/label";
 import { useUserStore } from "@/store/useUser";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const passwordSchema = z
   .string()
@@ -56,6 +58,18 @@ const noPasswordSchema = z.object({
 const LoginForm = () => {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
+  const { setAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    console.log("Checking for token...");
+    const token = Cookies.get("jwt");
+    console.log("Token from cookies:", token);
+    if (token) {
+      setAuthenticated(true);
+      navigate("/dashboard");
+    }
+  }, [navigate, setAuthenticated]);
 
   const next = () => setStep((prevStep) => prevStep + 1);
   const back = () => setStep((prevStep) => prevStep - 1);
@@ -213,7 +227,7 @@ const LoginWithPassword = ({ next }: { next: () => void }) => {
             onClick={next}
             className="w-full bg-accent/50"
           >
-            Login without password
+            Login via Email
           </Button>
         </form>
       </Form>

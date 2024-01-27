@@ -24,6 +24,7 @@
     "clsx": "^2.1.0",
     "date-fns": "^3.2.0",
     "framer-motion": "^10.18.0",
+    "js-cookie": "^3.0.5",
     "lucide-react": "^0.309.0",
     "react": "^18.2.0",
     "react-datepicker": "^4.25.0",
@@ -40,6 +41,7 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.43",
     "@types/react-datepicker": "^4.19.5",

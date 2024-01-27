@@ -4,7 +4,6 @@ import {
   loginUser,
   signupUser,
   resetPassword,
-  verifyUser,
   generateotp,
   verifyOTP,
   resetOTP,
@@ -46,9 +45,6 @@ userRouter.put("/resetpasswordAuth", Auth, resetPasswordWithAuth);
 
 // verify user then generate otp
 userRouter.post("/generateotp", generateotp);
-
-// verify user
-userRouter.post("/verifyUser", verifyUser);
 
 // updat User
 userRouter.put("/updateUser", Auth, updateUserDetails);
