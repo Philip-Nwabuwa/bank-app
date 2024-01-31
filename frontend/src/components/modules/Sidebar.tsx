@@ -15,22 +15,22 @@ const Sidebar = () => {
       title: "Dashboard",
     },
     {
-      link: "/wallet",
+      link: "/dashboard/wallet",
       icon: <WalletCards className="w-8 h-8" />,
       title: "Wallet",
     },
     {
-      link: "/transactions",
+      link: "/dashboard/transactions",
       icon: <Icons.transactions className="w-8 h-8" />,
       title: "Transactions",
     },
     {
-      link: "/messages",
+      link: "/dashboard/messages",
       icon: <MessageSquare className="w-8 h-8" />,
       title: "Messages",
     },
     {
-      link: "/profile",
+      link: "/dashboard/profile",
       icon: <UserRound className="w-8 h-8" />,
       title: "Profile",
     },
@@ -41,6 +41,7 @@ const Sidebar = () => {
         <NavLink
           key={index}
           to={item.link}
+          end={item.link === "/dashboard"}
           className={({ isActive }) =>
             `w-full flex items-center gap-3 md:py-3 md:pl-4 rounded-md ${
               isActive ? "md:bg-slate-300" : "md:hover:bg-slate-200"

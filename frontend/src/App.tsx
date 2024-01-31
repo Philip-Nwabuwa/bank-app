@@ -1,8 +1,9 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { Toaster } from "sonner";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import AuthLayout from "./pages/auth/AuthLayout";
 import LoginForm from "./components/modules/LoginForm";
 import SignUpForm from "./components/modules/SignUpForm";
@@ -15,47 +16,79 @@ import {
   Transactions,
   Wallet,
 } from "./pages/Main";
-
-const queryClient = new QueryClient({
-  defaultOptions: {},
-});
-
-function Layout() {
-  return (
-    <>
-      <Routes>
-        <Route element={<AuthLayout />}>
-          <Route path="/signup" element={<SignUpForm />} />
-          <Route path="/login" element={<LoginForm />} />
-        </Route>
-
-        <Route element={<MainLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/transactions" element={<Transactions />} />
-          <Route path="/wallet" element={<Wallet />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/profile" element={<Profile />} />
-        </Route>
-        <Route path="*" element={<NotFound />} />
-
-        <Route path="/" element={<Navigate replace to="/dashboard" />} />
-      </Routes>
-    </>
-  );
-}
+import ProtectedRoute from "./components/modules/auth/ProtectedRoute";
 
 function App() {
-  return (
-    <main>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <Layout />
-          <Toaster richColors position="top-center" />
-        </BrowserRouter>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </main>
-  );
+  const router = createBrowserRouter([
+    {
+      element: <AuthLayout />,
+      children: [
+        {
+          path: "/login",
+          element: <LoginForm />,
+        },
+        {
+          path: "/signup",
+          element: <SignUpForm />,
+        },
+      ],
+    },
+    {
+      path: "*",
+      element: <NotFound />,
+    },
+    {
+      path: "/",
+      element: <Navigate to="/dashboard" replace />,
+    },
+    {
+      element: <MainLayout />,
+      children: [
+        {
+          path: "/dashboard",
+          element: (
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "/dashboard/messages",
+          element: (
+            <ProtectedRoute>
+              <Messages />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "/dashboard/profile",
+          element: (
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "/dashboard/transactions",
+          element: (
+            <ProtectedRoute>
+              <Transactions />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "/dashboard/wallet",
+          element: (
+            <ProtectedRoute>
+              <Wallet />
+            </ProtectedRoute>
+          ),
+        },
+      ],
+    },
+  ]);
+
+  return <RouterProvider router={router} />;
 }
 
 export default App;

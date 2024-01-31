@@ -62,6 +62,18 @@ export const deposit = async (req, res) => {
     const details = req.body.details;
     const userId = req.user._id;
 
+    if (!depositAmount || !details) {
+      return res.status(400).send("Please provide amount and details");
+    }
+
+    if (depositAmount <= 0) {
+      return res.status(400).send("Amount must be greater than 0");
+    }
+
+    if (depositAmount > 10000000) {
+      return res.status(400).send("Amount must be less than 10,000,000");
+    }
+
     const activeAccount = await Account.findOne({ userId: userId });
 
     if (!activeAccount) {

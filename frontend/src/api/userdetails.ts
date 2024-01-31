@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 const config = {
   headers: {
@@ -184,4 +184,25 @@ export const useGetuser = () => {
   });
 
   return { data, refetch, isLoading };
+};
+
+export const useVerifyAuth = () => {
+  const queryFn = async () => {
+    try {
+      const response = await axios.get("/api/account/verify");
+      console.log(response.data);
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const { refetch, isSuccess, isLoading, error, data } = useQuery({
+    queryKey: ["verifyAuth"],
+    queryFn: queryFn,
+    retry: false,
+  });
+
+  return { refetch, isLoading, isSuccess, error, data };
 };

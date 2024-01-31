@@ -32,19 +32,8 @@ import { AlertOctagon, CheckCheck, Loader, Undo2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Label } from "../ui/label";
 import { useUserStore } from "@/store/useUser";
-import { useAuthStore } from "@/store/useAuthStore";
 
-const passwordSchema = z
-  .string()
-  .min(8, { message: "Password must be at least 8 characters long" })
-  .regex(/[a-z]/, {
-    message: "Password must contain at least one lowercase letter",
-  })
-  .regex(/[A-Z]/, {
-    message: "Password must contain at least one uppercase letter",
-  })
-  .regex(/[0-9]/, { message: "Password must contain at least one number" })
-  .regex(/[\W_]/, { message: "Password must contain at least one symbol" });
+const passwordSchema = z.string();
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -59,17 +48,6 @@ const LoginForm = () => {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
-  const { setAuthenticated } = useAuthStore();
-
-  useEffect(() => {
-    console.log("Checking for token...");
-    const token = Cookies.get("jwt");
-    console.log("Token from cookies:", token);
-    if (token) {
-      setAuthenticated(true);
-      navigate("/dashboard");
-    }
-  }, [navigate, setAuthenticated]);
 
   const next = () => setStep((prevStep) => prevStep + 1);
   const back = () => setStep((prevStep) => prevStep - 1);
@@ -101,7 +79,7 @@ const LoginForm = () => {
 const LoginWithPassword = ({ next }: { next: () => void }) => {
   const [networkError, setNetworkError] = useState("");
   const { mutateAsync, isLoading } = useLogin();
-  const Navigate = useNavigate();
+  const navigate = useNavigate();
 
   const setUser = useUserStore((state) => state.setUser);
 
@@ -121,20 +99,23 @@ const LoginWithPassword = ({ next }: { next: () => void }) => {
     }
     try {
       const response = await mutateAsync(values);
+      console.log(response);
 
       setUser(response.data.user);
       toast.success(response.data.message);
-      Navigate("/dashboard");
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 2000);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const serverError = error.response?.data;
         if (serverError && serverError.details) {
           toast.error(serverError.details);
         } else {
-          console.error("An unexpected error occurred:", error.message);
+          toast.error("An unexpected error occurred, please try again later");
         }
       } else {
-        console.error("An error occurred:", error);
+        toast.error("An error occurred:");
       }
     }
   };
@@ -373,12 +354,31 @@ const LoginWithoutPassword = ({
 const VerifyOTP = ({ back, email }: { back: () => void; email: string }) => {
   const { isLoading, mutateAsync, data } = useLoginWithoutPassword();
   const { isLoading: resendingOTP, mutateAsync: OTPAsync } = useresetOTP();
-  const Navigate = useNavigate();
+  const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
+  const [countdown, setCountdown] = useState(60);
   const [isResendDisabled, setResendDisabled] = useState(false);
   const [networkError, setNetworkError] = useState("");
   const [otp, setOTP] = useState<number | undefined>();
+
+  const startCountdown = (duration: number) => {
+    setCountdown(duration);
+    setResendDisabled(true);
+    const intervalId = setInterval(() => {
+      setCountdown((prevCountdown) => {
+        if (prevCountdown <= 1) {
+          clearInterval(intervalId);
+          setResendDisabled(false);
+          return 0;
+        }
+        return prevCountdown - 1;
+      });
+    }, 1000);
+  };
+
+  useEffect(() => {
+    startCountdown(60);
+  }, []);
 
   const onResndOTP = async () => {
     if (!navigator.onLine) {
@@ -391,6 +391,7 @@ const VerifyOTP = ({ back, email }: { back: () => void; email: string }) => {
       setResendDisabled(true);
       const res = await OTPAsync({ email });
       toast.success(res.data.message);
+      startCountdown(60);
     } catch (error) {
       if (error instanceof AxiosError) {
         toast.error(error.response?.data.error);
@@ -398,9 +399,6 @@ const VerifyOTP = ({ back, email }: { back: () => void; email: string }) => {
         console.error("An error occurred:", error);
       }
     }
-    setTimeout(() => {
-      setResendDisabled(false);
-    }, 3 * 60 * 1000);
   };
 
   const onSubmit = async (e: { preventDefault: () => void }) => {
@@ -417,7 +415,9 @@ const VerifyOTP = ({ back, email }: { back: () => void; email: string }) => {
       try {
         const res = await mutateAsync({ email, otp: Number(otp) });
         toast.success(res.data.message);
-        Navigate("/dashboard");
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 2000);
       } catch (error) {
         if (error instanceof AxiosError) {
           toast.error(error.response?.data.error);
@@ -455,11 +455,6 @@ const VerifyOTP = ({ back, email }: { back: () => void; email: string }) => {
             autoFocus
             onChange={(e) => {
               const otpValue = Number(e.target.value);
-              if (otpValue.toString().length === 6) {
-                setLoading(false);
-              } else {
-                setLoading(true);
-              }
               setOTP(otpValue);
             }}
           />
@@ -472,15 +467,21 @@ const VerifyOTP = ({ back, email }: { back: () => void; email: string }) => {
             </div>
           ) : null}
         </div>
-        <div className="flex items-center justify-end">
-          <Button
-            disabled={isResendDisabled}
-            onClick={onResndOTP}
-            className="pr-0"
-            variant={"link"}
-          >
-            {resendingOTP ? <Loader className="animate-spin" /> : "Resend OTP"}
-          </Button>
+        <div className="flex items-center justify-end py-2">
+          {resendingOTP ? (
+            <Loader className="animate-spin" />
+          ) : countdown > 0 ? (
+            <p>You can resend OTP in {countdown} seconds.</p>
+          ) : (
+            <Button
+              disabled={isResendDisabled}
+              onClick={onResndOTP}
+              className="p-0"
+              variant={"link"}
+            >
+              Resend OTP
+            </Button>
+          )}
         </div>
 
         {networkError && (
@@ -495,7 +496,7 @@ const VerifyOTP = ({ back, email }: { back: () => void; email: string }) => {
           </div>
         )}
         <Button
-          disabled={isLoading || loading || resendingOTP}
+          disabled={isLoading || resendingOTP || !otp}
           className="w-full mt-4"
           type="submit"
         >

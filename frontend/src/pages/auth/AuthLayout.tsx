@@ -4,9 +4,6 @@ import { useEffect, useState } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 
 const AuthLayout = () => {
-  const { isAuthenticated } = useAuthStore();
-  console.log(isAuthenticated);
-
   const testimonials = [
     {
       author: "Eduardo G",
@@ -41,51 +38,42 @@ const AuthLayout = () => {
     const intervalId = setInterval(() => {
       setCurrentTestimonialIndex((prevIndex) => {
         const randomIndex = Math.floor(Math.random() * testimonials.length);
-        // Ensure we get a different testimonial by checking the random index is not the current one
         return randomIndex !== prevIndex
           ? randomIndex
           : (randomIndex + 1) % testimonials.length;
       });
     }, 8000);
 
-    return () => clearInterval(intervalId); // Clean up the interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   const currentTestimonial = testimonials[currentTestimonialIndex];
   return (
     <>
-      {isAuthenticated ? (
-        <Navigate to="/dashboard" />
-      ) : (
-        <>
-          <div className="container relative h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-            <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-              <div className="absolute inset-0 bg-zinc-800" />
-              <div className="relative z-20 flex items-center text-lg font-medium">
-                <CreditCard className="w-10 h-10 text-accent pr-2" />
-                FundFirst
-              </div>
-              <div className="relative z-20 mt-auto bg-gradient-to-br from-zinc-600 to-zinc-800 rounded-lg p-4">
-                <blockquote key={currentTestimonialIndex} className="space-y-2">
-                  <p className="text-lg">
-                    &ldquo;{currentTestimonial.quote}&rdquo;
-                  </p>
-                  <footer className="text-sm">
-                    <cite className="font-medium">
-                      {currentTestimonial.author}
-                    </cite>
-                  </footer>
-                </blockquote>
-              </div>
-            </div>
-            <div className="lg:p-8">
-              <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-                <Outlet />{" "}
-              </div>
-            </div>
+      <div className="container relative h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+        <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
+          <div className="absolute inset-0 bg-zinc-800" />
+          <div className="relative z-20 flex items-center text-lg font-medium">
+            <CreditCard className="w-10 h-10 text-accent pr-2" />
+            FundFirst
           </div>
-        </>
-      )}
+          <div className="relative z-20 mt-auto bg-gradient-to-br from-zinc-600 to-zinc-800 rounded-lg p-4">
+            <blockquote key={currentTestimonialIndex} className="space-y-2">
+              <p className="text-lg">
+                &ldquo;{currentTestimonial.quote}&rdquo;
+              </p>
+              <footer className="text-sm">
+                <cite className="font-medium">{currentTestimonial.author}</cite>
+              </footer>
+            </blockquote>
+          </div>
+        </div>
+        <div className="lg:p-8">
+          <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+            <Outlet />{" "}
+          </div>
+        </div>
+      </div>
     </>
   );
 };

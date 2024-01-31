@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import asyncHandler from "express-async-handler";
+import jwt from "jsonwebtoken";
 
 import userModel from "../models/userModel.js";
 import otpModel from "../models/otpModel.js";
@@ -22,7 +23,7 @@ export const loginUser = asyncHandler(async (req, res) => {
     const user = await userModel.login(email, password);
     await userModel.updateOne({ email }, { loginAttempts: 0 });
     generateToken(res, user._id);
-    SendEmailLogin({ email });
+    // SendEmailLogin({ email });
     return res.status(200).json({
       message: "Login successful",
       user: {
@@ -134,23 +135,22 @@ export const logoutUser = asyncHandler(async (req, res) => {
 
 // reset password without authentication
 export const resetPassword = asyncHandler(async (req, res) => {
-  const { otp, password, email } = req.body;
-  if (!otp || !password || !email) {
-    return res
-      .status(400)
-      .json({ error: "Please provide OTP, password and email" });
+  const { password, email } = req.body;
+  if (!password || !email) {
+    return res.status(400).json({ error: "Please provide password and email" });
   }
   try {
-    const user = await otpModel.findOne({ email });
+    const user = await userModel.findOne({ email });
     if (!user) {
       return res.status(400).json({ error: "Invalid user" });
     }
-    if (otp === user.otp) {
-      await otpModel.deleteOne({ email });
+    if (user) {
+      const salt = await bcrypt.genSalt(10);
+      const newPassword = await bcrypt.hash(password, salt);
       await userModel.updateOne(
         { email },
         {
-          password,
+          password: newPassword,
           isLocked: false,
           loginAttempts: 0,
         }
@@ -159,7 +159,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
         .status(200)
         .json({ message: "Password reset, proceed to login" });
     } else {
-      return res.status(400).json({ error: "Invalid OTP" });
+      return res.status(400).json({ error: "Error during reset" });
     }
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -227,14 +227,22 @@ export const verifyUser = asyncHandler(async (req, res) => {
     if (!token) {
       return res.status(401).json({ isAuthenticated: false });
     }
-    jwt.verify(token, tokenKey, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
-        return res.status(401).json({ isAuthenticated: false });
+        return res.status(401).json({
+          isAuthenticated: false,
+          error: "Token verification failed",
+          details: err.message,
+        });
       }
       res.json({ isAuthenticated: true, user: decoded });
     });
   } catch (error) {
-    res.status(500).json({ isAuthenticated: false });
+    console.error("Unexpected error in verifyUser:", error);
+    res.status(500).json({
+      error: "An unexpected error occurred during verification",
+      details: error.message,
+    });
   }
 });
 
