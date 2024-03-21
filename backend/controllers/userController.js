@@ -19,6 +19,9 @@ const tokenKey = process.env.JWT_SECRET;
 // login a user
 export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: "Please provide email and password" });
+  }
   try {
     const user = await userModel.login(email, password);
     await userModel.updateOne({ email }, { loginAttempts: 0 });
