@@ -14,6 +14,7 @@ import {
   emailCheck,
   emailLoginCheck,
   loginUserWithoutPassword,
+  getAllUsers,
 } from "../controllers/userController.js";
 import Auth from "../middleware/Auth.js";
 
@@ -24,6 +25,9 @@ userRouter.post("/login", loginUser);
 
 // loginwithoutPassword
 userRouter.post("/loginwithoutPassword", loginUserWithoutPassword);
+
+// get all users
+userRouter.get("/getusers", getAllUsers);
 
 // signup route
 userRouter.post("/signup", signupUser);

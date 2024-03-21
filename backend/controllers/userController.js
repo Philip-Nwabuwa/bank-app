@@ -24,23 +24,29 @@ export const loginUser = asyncHandler(async (req, res) => {
   }
   try {
     const user = await userModel.login(email, password);
-    await userModel.updateOne({ email }, { loginAttempts: 0 });
-    generateToken(res, user._id);
-    // SendEmailLogin({ email });
-    return res.status(200).json({
-      message: "Login successful",
-      user: {
-        _id: user._id,
-        image: user.image,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        mobile: user.mobile,
-        address: user.address,
-        gender: user.gender,
-        createdAt: user.createdAt,
-      },
-    });
+    if (user.isLocked) {
+      return res
+        .status(400)
+        .json({ error: "Account locked. Please reset your password." });
+    } else {
+      await userModel.updateOne({ email }, { loginAttempts: 0 });
+      generateToken(res, user._id);
+      // SendEmailLogin({ email });
+      return res.status(200).json({
+        message: "Login successful",
+        user: {
+          _id: user._id,
+          image: user.image,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          mobile: user.mobile,
+          address: user.address,
+          gender: user.gender,
+          createdAt: user.createdAt,
+        },
+      });
+    }
   } catch (error) {
     return res.status(500).json({
       error: "An error occurred during login",
@@ -346,5 +352,15 @@ export const verifyOTP = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: "Invalid OTP" });
   } catch (error) {
     return res.status(500).json({ error: "An error occurred" });
+  }
+});
+
+export const getAllUsers = asyncHandler(async (req, res) => {
+  try {
+    const users = await userModel.find();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+    console.error("Unexpected error in getAllUsers:", error);
   }
 });
